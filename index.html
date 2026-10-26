@@ -13,42 +13,25 @@
   <script src="js/app.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#step-container" data-i18n="skip_link">Go to the quiz</a>
+  <a class="skip-link" href="#step-container" data-i18n="skip_link">Перейти к выбору участка</a>
   <main class="experience" id="top">
-    <section class="visual-panel" aria-label="Land photos">
-      <div class="visual-photo" id="visual-photo-button">
-        <img class="visual-image" id="visual-image" src="assets/images/plots-together.webp" alt="" width="1280" height="720" fetchpriority="high">
+    <header class="site-header">
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"><i class="fa-solid fa-leaf"></i></span><span data-i18n="brand_name">Подушкин лес</span></a>
+      <div class="language-switch" role="group" aria-label="Выбор языка">
+        <button type="button" class="language-button is-active" data-language="ru" aria-pressed="true">RU</button>
+        <span aria-hidden="true"></span>
+        <button type="button" class="language-button" data-language="zh-CN" aria-pressed="false">&#20013;&#25991;</button>
       </div>
-      <div class="visual-shade" aria-hidden="true"></div>
-      <div class="visual-copy" aria-live="polite">
-        <h1 id="visual-caption" data-i18n="hero_title">Земля для вашего проекта</h1>
-        <div class="visual-facts" aria-label="Местоположение и формат аренды">
-          <div class="visual-fact">
-            <span class="visual-fact-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
-            <span class="visual-fact-copy"><strong data-i18n="hero_location_title">Пригород Хабаровска</strong><small data-i18n="hero_location_detail">Аэропорт «Новый» · Тополево</small></span>
-          </div>
-          <div class="visual-fact">
-            <span class="visual-fact-icon" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></span>
-            <span class="visual-fact-copy"><strong data-i18n="hero_offer_title">Долгосрочная аренда</strong><small data-i18n="hero_offer_detail">Участки 9,5 га и 7,4 га</small></span>
-          </div>
-        </div>
-      </div>
-    </section>
+    </header>
 
-    <section class="quiz-panel" id="quiz" aria-label="Land selection quiz">
-      <div class="panel-controls">
-        <span class="panel-step" id="panel-step" aria-live="polite"></span>
-        <div class="language-switch" role="group" aria-label="Language">
-          <button type="button" class="language-button is-active" data-language="ru" aria-pressed="true">RU</button>
-          <span aria-hidden="true"></span>
-          <button type="button" class="language-button" data-language="zh-CN" aria-pressed="false">&#20013;&#25991;</button>
-        </div>
+    <section class="quiz-panel" id="quiz" aria-label="Подбор земельного участка" data-i18n-aria="progress_label">
+      <div class="quiz-progress" id="quiz-progress" aria-live="polite">
+        <div class="progress-caption"><span id="panel-step"></span></div>
       </div>
-      <div class="quiz-progress" id="quiz-progress"></div>
       <div class="step-container" id="step-container" aria-live="polite" aria-atomic="false"></div>
     </section>
   </main>
-  <dialog class="lead-dialog" id="lead-dialog" aria-label="???????? ???????">
+  <dialog class="lead-dialog" id="lead-dialog" aria-label="Оставьте контакт для связи" data-i18n-aria="contact_step_title">
     <section class="lead-dialog-panel" id="lead-dialog-content">
       <button type="button" class="dialog-close" data-action="close-contact" data-i18n-aria="dialog_close" aria-label="Close form"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
       <h2 id="lead-dialog-title" data-i18n="contact_step_title">Leave your contact</h2>
@@ -63,6 +46,10 @@
         <div class="submit-area"><button type="submit" class="nav-next"><span id="submit-label" data-i18n="form_submit">Send request</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button><p class="submit-status" id="submit-status" aria-live="polite" hidden></p></div>
       </form>
     </section>
+  </dialog>
+  <dialog class="scheme-dialog" id="scheme-dialog" aria-label="Кадастровая схема" data-i18n-aria="result_scheme_caption">
+    <button type="button" class="dialog-close scheme-dialog-close" data-action="close-scheme" data-i18n-aria="dialog_close" aria-label="Закрыть"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    <img id="scheme-dialog-image" src="" alt="">
   </dialog>
   <noscript><p class="noscript-note">JavaScript is required for the quiz. Contact: +7 (924) 203-00-05.</p></noscript>
 </body>

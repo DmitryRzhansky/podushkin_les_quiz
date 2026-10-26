@@ -23,24 +23,10 @@
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[character]));
   const imagePath = (file) => "assets/images/" + file;
-  let advanceTimer = 0;
   const leadDialog = $("#lead-dialog");
   const leadDialogContent = $("#lead-dialog-content");
+  const schemeDialog = $("#scheme-dialog");
   const initialLeadDialogMarkup = leadDialogContent ? leadDialogContent.innerHTML : "";
-
-  function renderShowcase() {
-    const selection = state.answers.plot;
-    const id = selection === "95" ? "95" : selection === "74" ? "74" : "both";
-    const file = id === "95" ? land["95"].main.file : id === "74" ? land["74"].main.file : "plots-together.webp";
-    const altKey = id === "95" ? "alt_95_main" : id === "74" ? "alt_74_main" : "alt_both";
-    const image = $("#visual-image");
-    if (image) {
-      if (image.dataset.file !== file) { image.src = imagePath(file); image.dataset.file = file; }
-      image.alt = t(altKey);
-    }
-    const caption = $("#visual-caption");
-    if (caption) caption.textContent = t("hero_title");
-  }
 
   const land = {
     "95": {
@@ -68,9 +54,9 @@
   };
 
   const plotOptions = [
-    { value: "95", title: "plot_95_choice", description: "plot_95_choice_desc", image: "field-95-main.webp", alt: "alt_95_main", area: "9,5 га" },
-    { value: "74", title: "plot_74_choice", description: "plot_74_choice_desc", image: "field-74-access.webp", alt: "alt_74_main", area: "7,4 га" },
-    { value: "both", title: "plot_both_choice", description: "plot_both_choice_desc", image: "plots-together.webp", alt: "alt_both", area: "16,9 га" }
+    { value: "95", title: "plot_95_choice", description: "plot_95_choice_desc", image: "field-95-main.webp", alt: "alt_95_main" },
+    { value: "74", title: "plot_74_choice", description: "plot_74_choice_desc", image: "field-74-access.webp", alt: "alt_74_main" },
+    { value: "both", title: "plot_both_choice", description: "plot_both_choice_desc", image: "plots-together.webp", alt: "alt_both" }
   ];
   const purposeOptions = [
     { value: "greenhouse", title: "purpose_greenhouse", icon: "fa-seedling" },
@@ -116,7 +102,7 @@
       '<span class="selection-check" aria-hidden="true"><i class="fa-solid fa-check"></i></span>' +
       '<img src="' + imagePath(item.image) + '" alt="' + esc(t(item.alt)) + '" loading="lazy">' +
       '<span class="plot-choice-content"><span class="plot-choice-top"><strong>' + t(item.title) +
-      '</strong><small>' + item.area + '</small></span><span class="plot-choice-description">' +
+      '</strong></span><span class="plot-choice-description">' +
       t(item.description) + '</span></span></label>';
   }
 
@@ -131,7 +117,8 @@
   }
 
   function question(titleKey, textKey) {
-    return '<div class="question-heading"><h3 id="current-question" tabindex="-1">' + t(titleKey) + '</h3></div>';
+    const description = textKey ? '<p>' + t(textKey) + '</p>' : '';
+    return '<div class="question-heading"><h1 id="current-question" tabindex="-1">' + t(titleKey) + '</h1>' + description + '</div>';
   }
 
   function navigation(back, canContinue, skip) {
@@ -141,11 +128,17 @@
     const skipButton = skip
       ? '<button type="button" class="nav-skip" data-action="skip">' + t("button_skip") + '</button>'
       : "";
+    const continueButton = ["plot", "purpose", "term", "visit"].includes(state.step)
+      ? '<button type="button" class="nav-next" data-action="continue"' + (canContinue ? "" : " disabled") + '>' + t("button_continue") + '<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>'
+      : "";
+    const founderSignature = continueButton
+      ? '<aside class="founder-signature"><img src="' + imagePath("quiz-avatar.webp") + '" alt="' + esc(t("alt_avatar")) + '" width="64" height="64"><span class="founder-copy"><strong>' + t("founder_name") + '</strong><small>' + t("founder_role") + '</small></span></aside>'
+      : "";
     const restartButton = state.step === "result"
       ? '<button type="button" class="nav-restart" data-action="restart"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i>' + t("button_restart") + '</button>'
       : "";
-    if (!backButton && !skipButton && !restartButton) return "";
-    return '<div class="question-actions">' + backButton + restartButton + skipButton + '</div>';
+    if (!backButton && !skipButton && !restartButton && !continueButton) return "";
+    return '<div class="question-actions">' + backButton + founderSignature + restartButton + skipButton + continueButton + '</div>';
   }
 
   function renderPlotStep() {
@@ -158,33 +151,29 @@
       '<span class="selection-check" aria-hidden="true"><i class="fa-solid fa-check"></i></span></label>';
     return '<div class="step-pane">' + question("step_plot_title", "step_plot_help") +
       '<fieldset class="choices-fieldset"><legend class="visually-hidden">' + t("step_plot_title") + '</legend>' +
-      '<div class="plot-choices">' + plotOptions.map(imageOption).join("") + help + '</div></fieldset></div>';
+      '<div class="plot-choices">' + plotOptions.map(imageOption).join("") + help + '</div></fieldset>' +
+      navigation("", Boolean(state.answers.plot), false) + '</div>';
   }
 
   function renderPurposeStep() {
     return '<div class="step-pane">' + question("step_purpose_title", "step_purpose_help") +
       '<fieldset class="choices-fieldset"><legend class="visually-hidden">' + t("step_purpose_title") + '</legend>' +
-      '<div class="answer-choices">' + purposeOptions.map((item) => textOption("purpose", item)).join("") + '</div></fieldset>' +
+      '<div class="answer-choices purpose-choices">' + purposeOptions.map((item) => textOption("purpose", item)).join("") + '</div></fieldset>' +
       navigation("plot", Boolean(state.answers.purpose), false) + '</div>';
   }
 
   function renderTermStep() {
     return '<div class="step-pane">' + question("step_term_title", "step_term_help") +
       '<fieldset class="choices-fieldset"><legend class="visually-hidden">' + t("step_term_title") + '</legend>' +
-      '<div class="answer-choices">' + termOptions.map((item) => textOption("term", item)).join("") + '</div></fieldset>' +
+      '<div class="answer-choices term-choices">' + termOptions.map((item) => textOption("term", item)).join("") + '</div></fieldset>' +
       navigation("purpose", Boolean(state.answers.term), false) + '</div>';
   }
 
   function renderVisitStep() {
-    const visitCopy = t("visit_notice_text").split(/(?<=[.!?\u3002])\s*/u);
-    const visitFacts = esc(visitCopy[0] || "");
-    const visitTiming = esc(visitCopy.slice(1).join(" "));
     return '<div class="step-pane visit-pane">' + question("step_visit_title", "step_visit_help") +
-      '<aside class="visit-info-card"><img src="' + imagePath("visit-plots.webp") + '" alt="' + esc(t("alt_visit")) + '" width="520" height="781">' +
-      '<div><h4>' + t("visit_notice_title") + '</h4><p>' + visitFacts + '</p><small>' + visitTiming + '</small></div></aside>' +
       '<fieldset class="choices-fieldset"><legend class="visually-hidden">' + t("step_visit_title") + '</legend>' +
-      '<div class="answer-choices">' + visitOptions.map((item) => textOption("visit", item)).join("") + '</div></fieldset>' +
-      navigation("term", true, true) + '</div>';
+      '<div class="answer-choices visit-choices">' + visitOptions.map((item) => textOption("visit", item)).join("") + '</div></fieldset>' +
+      navigation("term", Boolean(state.answers.visit), true) + '</div>';
   }
 
   function resultLandCard(id) {
@@ -192,7 +181,7 @@
     const scheme = item.images.find((photo) => photo.kind === "scheme");
     return '<article class="result-property"><div class="result-property-media">' +
       '<img class="result-property-photo" src="' + imagePath(item.main.file) + '" alt="' + esc(t(item.main.alt)) + '" width="520" height="300">' +
-      '<img class="result-property-scheme" src="' + imagePath(scheme.file) + '" alt="' + esc(t(scheme.alt)) + '" width="240" height="180">' +
+      '<button type="button" class="scheme-thumb" data-action="zoom-scheme" data-scheme-src="' + imagePath(scheme.file) + '" data-scheme-alt="' + esc(t(scheme.alt)) + '" aria-label="' + esc(t("result_scheme_zoom")) + '"><img class="result-property-scheme" src="' + imagePath(scheme.file) + '" alt="" width="240" height="180"><span>' + t("result_scheme_caption") + '<i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i></span></button>' +
       '</div><div class="result-property-copy"><div class="result-property-title"><h4>' + t(item.title) +
       '</h4><span class="result-area">' + item.area + '</span></div><p>' + t(item.subtitle) + '</p>' +
       '<div class="result-cadastre"><span>' + t("result_cadastre_label") + '</span><strong>' + t(item.cadastre) + '</strong></div></div></article>';
@@ -203,7 +192,7 @@
     const headingKey = selectedPlot === "95" ? "result_heading_95"
       : selectedPlot === "74" ? "result_heading_74" : "result_heading_both";
     const ids = state.answers.plot === "95" ? ["95"] : state.answers.plot === "74" ? ["74"] : ["95", "74"];
-    return '<div class="step-pane result-pane"><div class="result-heading"><h3 id="current-question" tabindex="-1">' + t(headingKey) + '</h3></div>' +
+    return '<div class="step-pane result-pane"><div class="result-heading"><h1 id="current-question" tabindex="-1">' + t(headingKey) + '</h1></div>' +
       '<div class="result-land-list">' + ids.map(resultLandCard).join("") + '</div>' +
       '<section class="result-contact-box"><div><h4>' + t("result_next_title") + '</h4><p>' + t("result_next_text") +
       '</p></div><button type="button" class="nav-next" data-action="to-contact">' + t("result_cta") +
@@ -226,15 +215,16 @@
     if (!progress) return;
     const questions = ["plot", "purpose", "term", "visit"];
     const questionIndex = questions.indexOf(state.step);
+    const isResult = state.step === "result";
     const current = questionIndex < 0 ? questions.length : questionIndex + 1;
     const total = questions.length;
     const percent = Math.round((current / total) * 100);
-    const counter = $("#panel-step");
-    const counterText = t("step_count", { current: current, total: total });
-    if (counter) counter.textContent = counterText;
-    progress.innerHTML = '<div class="progress-track" role="progressbar" aria-label="' + esc(t("progress_label")) +
+    const counterText = isResult ? t("result_step_label") : t("step_count", { current: current, total: total });
+    progress.innerHTML = '<div class="progress-caption"><span id="panel-step">' + esc(counterText) + '</span></div>' +
+      '<div class="progress-track" role="progressbar" aria-label="' + esc(t("progress_label")) +
       '" aria-valuemin="1" aria-valuemax="' + total + '" aria-valuenow="' + current + '">' +
       '<span class="progress-fill" style="width:' + percent + '%"></span></div>';
+    progress.classList.toggle("is-complete", isResult);
   }
 
   function render() {
@@ -247,7 +237,6 @@
       : state.step === "visit" ? renderVisitStep()
       : renderResultStep();
     container.innerHTML = markup;
-    renderShowcase();
   }
 
   function setLanguage(language, keepFocus) {
@@ -324,7 +313,6 @@
   }
 
   function showStep(step) {
-    window.clearTimeout(advanceTimer);
     state.step = step;
     render();
     focusQuestion();
@@ -489,9 +477,19 @@
     if (actionButton) {
       const action = actionButton.dataset.action;
       if (action === "back") goBack();
+      else if (action === "continue") continueForward();
       else if (action === "skip") { state.answers.visit = ""; showStep("result"); }
       else if (action === "to-contact") openContactDialog();
       else if (action === "close-contact") { if (leadDialog && leadDialog.open) leadDialog.close(); }
+      else if (action === "zoom-scheme") {
+        const image = $("#scheme-dialog-image");
+        if (schemeDialog && image) {
+          image.src = actionButton.dataset.schemeSrc || "";
+          image.alt = actionButton.dataset.schemeAlt || "";
+          if (!schemeDialog.open && typeof schemeDialog.showModal === "function") schemeDialog.showModal();
+        }
+      }
+      else if (action === "close-scheme") { if (schemeDialog && schemeDialog.open) schemeDialog.close(); }
       else if (action === "restart") restart();
       return;
     }
@@ -507,11 +505,8 @@
       const label = radio.closest("label");
       if (label) label.classList.toggle("is-selected", radio.checked);
     });
-    renderShowcase();
-    window.clearTimeout(advanceTimer);
-    advanceTimer = window.setTimeout(() => {
-      if (state.step === group && state.answers[group]) continueForward();
-    }, 380);
+    const continueButton = $('[data-action="continue"]', stepContainer);
+    if (continueButton) continueButton.disabled = !state.answers[group];
   });
 
   document.addEventListener("input", (event) => {
@@ -541,6 +536,12 @@
   if (leadDialog) {
     leadDialog.addEventListener("click", (event) => {
       if (event.target === leadDialog) leadDialog.close();
+    });
+  }
+
+  if (schemeDialog) {
+    schemeDialog.addEventListener("click", (event) => {
+      if (event.target === schemeDialog) schemeDialog.close();
     });
   }
 
